@@ -13,13 +13,13 @@ services:
     networks:
       - internal_network
     restart: always
-
   redis:
     image: redis:latest
     container_name: redis
-    command: redis-server --appendonly yes
+    command: redis-server /usr/local/etc/redis/redis.conf  # Указываем путь к кастомной конфигурации
     volumes:
-      - ./redis_data:/data
+      - .redis_data/config/redis.conf:/usr/local/etc/redis/redis.conf  # Монтируем кастомный конфиг
+      - .redis_data/data:/data  # Монтируем директорию для данных Redis
     networks:
       - internal_network
     restart: always
