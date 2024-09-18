@@ -8,7 +8,7 @@ services:
       MYSQL_USER: wpuser
       MYSQL_PASSWORD: wppassword
     volumes:
-      - ./mariadb_data/config/my.cnf:/etc/mysql/my.cnf   # Монтируем оптимизированный конфиг
+      - ./mariadb_data/config/mariadb.cnf:/etc/mysql/mariadb.cnf   # Монтируем оптимизированный конфиг
       - ./mariadb_data/data:/var/lib/mysql               # Монтируем данные базы данных
     networks:
       - internal_network
