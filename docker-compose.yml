@@ -8,8 +8,8 @@ services:
       MYSQL_USER: wpuser
       MYSQL_PASSWORD: wppassword
     volumes:
-      - .mariadb_data/config/my.cnf:/etc/mysql/my.cnf   # Монтируем оптимизированный конфиг
-      - .mariadb_data/data:/var/lib/mysql               # Монтируем данные базы данных
+      - ./mariadb_data/config/my.cnf:/etc/mysql/my.cnf   # Монтируем оптимизированный конфиг
+      - ./mariadb_data/data:/var/lib/mysql               # Монтируем данные базы данных
     networks:
       - internal_network
     restart: always
@@ -18,8 +18,8 @@ services:
     container_name: redis
     command: redis-server /usr/local/etc/redis/redis.conf  # Указываем путь к кастомной конфигурации
     volumes:
-      - .redis_data/config/redis.conf:/usr/local/etc/redis/redis.conf  # Монтируем кастомный конфиг
-      - .redis_data/data:/data  # Монтируем директорию для данных Redis
+      - ./redis_data/config/redis.conf:/usr/local/etc/redis/redis.conf  # Монтируем кастомный конфиг
+      - ./redis_data/data:/data  # Монтируем директорию для данных Redis
     networks:
       - internal_network
     restart: always
