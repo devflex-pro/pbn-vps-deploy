@@ -1,0 +1,25 @@
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: shared_database
+      MYSQL_USER: wpuser
+      MYSQL_PASSWORD: wppassword
+    volumes:
+      - .mariadb_data/config/my.cnf:/etc/mysql/my.cnf   # Монтируем оптимизированный конфиг
+      - .mariadb_data/data:/var/lib/mysql               # Монтируем данные базы данных
+    networks:
+      - internal_network
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    command: redis-server --appendonly yes
+    volumes:
+      - ./redis_data:/data
+    networks:
+      - internal_network
+    restart: always
