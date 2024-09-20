@@ -1,3 +1,6 @@
+networks:
+  wp-network:
+    driver: bridge
 services:
   nginx:
     image: nginx:latest
@@ -24,7 +27,7 @@ services:
       - mariadb_data/config/mariadb.cnf:/etc/mysql/mariadb.cnf   # Монтируем оптимизированный конфиг
       - mariadb_data/data:/var/lib/mysql               # Монтируем данные базы данных
     networks:
-      - wp_network
+      - wp-network
     restart: always
   redis:
     image: redis:latest
@@ -34,9 +37,6 @@ services:
       - redis_data/config/redis.conf:/usr/local/etc/redis/redis.conf  # Монтируем кастомный конфиг
       - redis_data/data:/data  # Монтируем директорию для данных Redis
     networks:
-      - wp_network
+      - wp-network
     restart: always
 
-networks:
-  wp_network:
-    driver: bridge
