@@ -4,6 +4,7 @@ services:
     container_name: nginx
     volumes:
       - /nginx_conf/conf.d:/etc/nginx/conf.d
+      - /nginx_conf/nginx.conf:/etc/nginx/nginx.conf # Монтируем основной конфиг Nginx
       - /nginx_conf/letsencrypt:/etc/letsencrypt
     networks:
       - wp-network
