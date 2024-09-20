@@ -1,4 +1,16 @@
 services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - /nginx_conf/conf.d:/etc/nginx/conf.d
+      - /nginx_conf/letsencrypt:/etc/letsencrypt
+    networks:
+      - wp-network
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
   mariadb:
     image: mariadb:latest
     container_name: mariadb
@@ -11,7 +23,7 @@ services:
       - ./mariadb_data/config/mariadb.cnf:/etc/mysql/mariadb.cnf   # Монтируем оптимизированный конфиг
       - ./mariadb_data/data:/var/lib/mysql               # Монтируем данные базы данных
     networks:
-      - internal_network
+      - wp_network
     restart: always
   redis:
     image: redis:latest
@@ -21,9 +33,9 @@ services:
       - ./redis_data/config/redis.conf:/usr/local/etc/redis/redis.conf  # Монтируем кастомный конфиг
       - ./redis_data/data:/data  # Монтируем директорию для данных Redis
     networks:
-      - internal_network
+      - wp_network
     restart: always
 
 networks:
-  internal_network:
+  wp_network:
     driver: bridge

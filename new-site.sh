@@ -6,15 +6,16 @@ DB_USER=$2
 DB_PASS=$3
 DOMAIN=$4
 EMAIL=$5
+DUMP_FILE=$6
 
 # Проверка наличия всех параметров
 if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ] || [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
-    echo "Usage: $0 <DB_NAME> <DB_USER> <DB_PASS> <DOMAIN> <EMAIL>"
+    echo "Usage: $0 <DB_NAME> <DB_USER> <DB_PASS> <DOMAIN> <EMAIL> [DUMP_FILE]"
     exit 1
 fi
 
 # Путь к существующему файлу docker-compose.yml
-DOCKER_COMPOSE_FILE="/path/to/your/docker-compose.yml"
+DOCKER_COMPOSE_FILE="docker-compose.yml"
 
 # Создание базы данных и пользователя
 echo "Creating database and user..."
@@ -26,13 +27,25 @@ FLUSH PRIVILEGES;
 MYSQL_SCRIPT
 echo "Database $DB_NAME and user $DB_USER created."
 
+# Импорт дампа базы данных, если указан
+if [ -n "$DUMP_FILE" ]; then
+    if [ -f "$DUMP_FILE" ]; then
+        echo "Importing database dump from $DUMP_FILE..."
+        docker exec -i mariadb mysql -u$DB_USER -p$DB_PASS $DB_NAME < "$DUMP_FILE"
+        echo "Database dump imported successfully."
+    else
+        echo "Error: Dump file $DUMP_FILE not found."
+        exit 1
+    fi
+fi
+
 # Создание структуры директорий для WordPress
 echo "Creating directories for WordPress..."
-mkdir -p /var/www/$DOMAIN/wp-content
+mkdir -p ./www/$DOMAIN/wp-content
 
 # Создание стартового скрипта для wp-config.php
 echo "Creating setup-wp-config.sh for WordPress..."
-cat <<EOL > /var/www/$DOMAIN/setup-wp-config.sh
+cat <<EOL > ./www/$DOMAIN/setup-wp-config.sh
 #!/bin/bash
 
 DB_NAME=$DB_NAME
@@ -77,7 +90,7 @@ fi
 EOL
 
 # Сделать setup-wp-config.sh исполняемым
-chmod +x /var/www/$DOMAIN/setup-wp-config.sh
+chmod +x ./www/$DOMAIN/setup-wp-config.sh
 
 # Добавление нового WordPress сервиса в существующий Docker Compose файл
 if grep -q "wordpress_$DOMAIN" "$DOCKER_COMPOSE_FILE"; then
@@ -96,8 +109,8 @@ else
       WORDPRESS_DB_PASSWORD: $DB_PASS
       WORDPRESS_REDIS_HOST: redis
     volumes:
-      - /var/www/$DOMAIN/wp-content:/var/www/html/wp-content
-      - /var/www/$DOMAIN/setup-wp-config.sh:/usr/local/bin/setup-wp-config.sh # Монтируем скрипт в контейнер
+      - ./www/$DOMAIN/wp-content:/var/www/html/wp-content
+      - ./www/$DOMAIN/setup-wp-config.sh:/usr/local/bin/setup-wp-config.sh # Монтируем скрипт в контейнер
     networks:
       - wp-network
     restart: always
@@ -105,13 +118,10 @@ else
 EOL
 fi
 
-# Перезапуск Docker Compose, чтобы применить изменения
-echo "Restarting Docker Compose..."
-docker-compose -f $DOCKER_COMPOSE_FILE up -d
 
-# Создание конфигурации для Nginx
+# Создание конфигурации Nginx для домена
 echo "Creating Nginx configuration for $DOMAIN..."
-cat <<EOL > /etc/nginx/sites-available/$DOMAIN.conf
+cat <<EOL > ./nginx_conf/conf.d/$DOMAIN.conf
 server {
     listen 80;
     server_name $DOMAIN www.$DOMAIN;
@@ -147,18 +157,20 @@ server {
 }
 EOL
 
-# Включение конфигурации Nginx
-ln -s /etc/nginx/sites-available/$DOMAIN.conf /etc/nginx/sites-enabled/
-
 # Перезапуск Nginx
-echo "Restarting Nginx..."
-systemctl restart nginx
+echo "Restarting Nginx container..."
+docker exec nginx nginx -s reload
 
-# Получение SSL-сертификата через Let's Encrypt
+# Получение SSL-сертификата через Certbot в контейнере
 echo "Requesting SSL certificate..."
-certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email $EMAIL
+docker run -it --rm --name certbot \
+  -v "./nginx_conf/letsencrypt:/etc/letsencrypt" \
+  -v "/var/lib/letsencrypt:/var/lib/letsencrypt" \
+  -v "./nginx_conf/conf.d:/etc/nginx/conf.d" \
+  certbot/certbot certonly --nginx -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --non-interactive
 
-# Автоматический перезапуск Nginx после получения сертификата
-systemctl reload nginx
+# Перезапуск Nginx для применения сертификатов
+echo "Restarting Nginx container to apply SSL certificates..."
+docker exec nginx nginx -s reload
 
 echo "Setup complete for $DOMAIN!"
