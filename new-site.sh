@@ -7,10 +7,11 @@ DB_PASS=$3
 DOMAIN=$4
 EMAIL=$5
 DUMP_FILE=$6
+LOCAL_PATH=$7 
 
 # Проверка наличия всех параметров
 if [ -z "$DB_NAME" ] || [ -z "$DB_USER" ] || [ -z "$DB_PASS" ] || [ -z "$DOMAIN" ] || [ -z "$EMAIL" ]; then
-    echo "Usage: $0 <DB_NAME> <DB_USER> <DB_PASS> <DOMAIN> <EMAIL> [DUMP_FILE]"
+    echo "Usage: $0 <DB_NAME> <DB_USER> <DB_PASS> <DOMAIN> <EMAIL> [DUMP_FILE] [LOCAL_PATH]"
     exit 1
 fi
 
@@ -42,6 +43,21 @@ fi
 # Создание структуры директорий для WordPress
 echo "Creating directories for WordPress..."
 mkdir -p ./www/$DOMAIN/wp-content
+
+# Копирование только директории wp-content из локальной папки
+# если указано в параметрах
+if [ -n "$LOCAL_PATH" ]; then
+  echo "Copying wp-content from $LOCAL_PATH/$DOMAIN/wp-content to ./www/$DOMAIN/wp-content..."
+  cp -r $LOCAL_PATH/$DOMAIN/wp-content/* ./www/$DOMAIN/wp-content/
+
+# Проверка результата копирования
+  if [ $? -eq 0 ]; then
+    echo "wp-content successfully copied to /var/www/$DOMAIN/wp-content."
+  else
+    echo "Error occurred while copying wp-content."
+    exit 1
+  fi
+fi
 
 # Создание стартового скрипта для wp-config.php
 echo "Creating setup-wp-config.sh for WordPress..."
