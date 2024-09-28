@@ -173,17 +173,13 @@ server {
 }
 EOL
 
-# Перезапуск Nginx
-echo "Restarting Nginx container..."
-docker exec nginx nginx -s reload
 
 # Получение SSL-сертификата через Certbot в контейнере
 echo "Requesting SSL certificate..."
 docker run -it --rm --name certbot \
   -v "./nginx_conf/letsencrypt:/etc/letsencrypt" \
-  -v "/var/lib/letsencrypt:/var/lib/letsencrypt" \
   -v "./nginx_conf/conf.d:/etc/nginx/conf.d" \
-  certbot/certbot certonly --nginx -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --non-interactive
+  certbot/certbot certonly --standalone -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --non-interactive
 
 # Перезапуск Nginx для применения сертификатов
 echo "Restarting Nginx container to apply SSL certificates..."
