@@ -59,54 +59,6 @@ if [ -n "$LOCAL_PATH" ]; then
   fi
 fi
 
-# Создание стартового скрипта для wp-config.php
-echo "Creating setup-wp-config.sh for WordPress..."
-cat <<EOL > ./www/$DOMAIN/setup-wp-config.sh
-#!/bin/bash
-
-DB_NAME=$DB_NAME
-DB_USER=$DB_USER
-DB_PASS=$DB_PASS
-DB_HOST=mariadb:3306
-
-WP_CONFIG_PATH="/var/www/html/wp-config.php"
-
-if [ ! -f \$WP_CONFIG_PATH ]; then
-    echo "Creating wp-config.php for WordPress..."
-
-    cp /var/www/html/wp-config-sample.php \$WP_CONFIG_PATH
-
-    sed -i "s/database_name_here/\$DB_NAME/" \$WP_CONFIG_PATH
-    sed -i "s/username_here/\$DB_USER/" \$WP_CONFIG_PATH
-    sed -i "s/password_here/\$DB_PASS/" \$WP_CONFIG_PATH
-    sed -i "s/localhost/\$DB_HOST/" \$WP_CONFIG_PATH
-
-    AUTH_KEY=\$(openssl rand -base64 32)
-    SECURE_AUTH_KEY=\$(openssl rand -base64 32)
-    LOGGED_IN_KEY=\$(openssl rand -base64 32)
-    NONCE_KEY=\$(openssl rand -base64 32)
-    AUTH_SALT=\$(openssl rand -base64 32)
-    SECURE_AUTH_SALT=\$(openssl rand -base64 32)
-    LOGGED_IN_SALT=\$(openssl rand -base64 32)
-    NONCE_SALT=\$(openssl rand -base64 32)
-
-    sed -i "s/put your unique phrase here/\$AUTH_KEY/" \$WP_CONFIG_PATH
-    sed -i "s/put your unique phrase here/\$SECURE_AUTH_KEY/" \$WP_CONFIG_PATH
-    sed -i "s/put your unique phrase here/\$LOGGED_IN_KEY/" \$WP_CONFIG_PATH
-    sed -i "s/put your unique phrase here/\$NONCE_KEY/" \$WP_CONFIG_PATH
-    sed -i "s/put your unique phrase here/\$AUTH_SALT/" \$WP_CONFIG_PATH
-    sed -i "s/put your unique phrase here/\$SECURE_AUTH_SALT/" \$WP_CONFIG_PATH
-    sed -i "s/put your unique phrase here/\$LOGGED_IN_SALT/" \$WP_CONFIG_PATH
-    sed -i "s/put your unique phrase here/\$NONCE_SALT/" \$WP_CONFIG_PATH
-
-    echo "wp-config.php has been created."
-else
-    echo "wp-config.php already exists."
-fi
-EOL
-
-# Сделать setup-wp-config.sh исполняемым
-chmod +x ./www/$DOMAIN/setup-wp-config.sh
 
 # Добавление нового WordPress сервиса в существующий Docker Compose файл
 if grep -q "wordpress_$DOMAIN" "$DOCKER_COMPOSE_FILE"; then
@@ -126,11 +78,9 @@ else
       WORDPRESS_REDIS_HOST: redis
     volumes:
       - ./www/$DOMAIN/wp-content:/var/www/html/wp-content
-      - ./www/$DOMAIN/setup-wp-config.sh:/usr/local/bin/setup-wp-config.sh # Монтируем скрипт в контейнер
     networks:
       - wp-network
     restart: always
-    command: ["bash", "-c", "docker-entrypoint.sh php-fpm & setup-wp-config.sh"]
 EOL
 fi
 
