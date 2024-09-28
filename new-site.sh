@@ -20,7 +20,7 @@ DOCKER_COMPOSE_FILE="docker-compose.yml"
 
 # Создание базы данных и пользователя
 echo "Creating database and user..."
-docker exec -i mariadb mysql -uroot -prootpassword <<MYSQL_SCRIPT
+docker exec -i mariadb mariadb -uroot -prootpassword <<MYSQL_SCRIPT
 CREATE DATABASE IF NOT EXISTS $DB_NAME;
 CREATE USER IF NOT EXISTS '$DB_USER'@'%' IDENTIFIED BY '$DB_PASS';
 GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'%';
@@ -32,7 +32,7 @@ echo "Database $DB_NAME and user $DB_USER created."
 if [ -n "$DUMP_FILE" ]; then
     if [ -f "$DUMP_FILE" ]; then
         echo "Importing database dump from $DUMP_FILE..."
-        docker exec -i mariadb mysql -u$DB_USER -p$DB_PASS $DB_NAME < "$DUMP_FILE"
+        docker exec -i mariadb mariadb -u$DB_USER -p$DB_PASS $DB_NAME < "$DUMP_FILE"
         echo "Database dump imported successfully."
     else
         echo "Error: Dump file $DUMP_FILE not found."
