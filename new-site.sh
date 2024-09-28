@@ -173,6 +173,8 @@ server {
 }
 EOL
 
+# Остановка контейнера Nginx, чтобы освободить порты 80 и 443 
+docker stop nginx
 
 # Получение SSL-сертификата через Certbot в контейнере
 echo "Requesting SSL certificate..."
@@ -182,7 +184,7 @@ docker run -it --rm --name certbot \
   certbot/certbot certonly --standalone -d $DOMAIN -d www.$DOMAIN --email $EMAIL --agree-tos --non-interactive
 
 # Перезапуск Nginx для применения сертификатов
-echo "Restarting Nginx container to apply SSL certificates..."
-docker exec nginx nginx -s reload
+echo "Restarting Nginx container to apply SSL certificatesand up new Wordpress container for $DOMAIN"
+docker compose up -d
 
 echo "Setup complete for $DOMAIN!"
