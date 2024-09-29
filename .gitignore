@@ -1,2 +1,3 @@
 mariadb_data/data/* 
 redis_data/data/*
+www/*
