@@ -130,7 +130,6 @@ docker stop nginx
 echo "Requesting SSL certificate..."
 docker run -it --rm --name certbot \
   -v "./nginx_conf/letsencrypt:/etc/letsencrypt" \
-  -v "./nginx_conf/conf.d:/etc/nginx/conf.d" \
   certbot/certbot certonly --standalone -d $DOMAIN --email $EMAIL --agree-tos --non-interactive
 
 # Перезапуск Nginx для применения сертификатов
