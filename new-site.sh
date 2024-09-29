@@ -98,7 +98,7 @@ server {
     listen 443 ssl;
     server_name $DOMAIN www.$DOMAIN;
 
-    root /var/www/$DOMAIN;
+    root /var/www/html;
     index index.php index.html index.htm;
 
     ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
