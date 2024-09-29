@@ -129,6 +129,8 @@ docker stop nginx
 # Получение SSL-сертификата через Certbot в контейнере
 echo "Requesting SSL certificate..."
 docker run -it --rm --name certbot \
+  -p 80:80 \
+  -p 443:443 \
   -v "./nginx_conf/letsencrypt:/etc/letsencrypt" \
   certbot/certbot certonly --standalone -d $DOMAIN --email $EMAIL --agree-tos --non-interactive
 
